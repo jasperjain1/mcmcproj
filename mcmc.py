@@ -30,7 +30,7 @@ w=np.array([-1.5,-.5])
 #new param: wa=w-3wa
 wa=np.array([-4,2])
 ns=np.array([.7,1])
-parspace=np.array([H0R,AsR,omch2R,tauR,ombh2R,w,ns])
+parspace=np.array([H0R,AsR,omch2R,tauR,ombh2R,w,wa,ns])
 
 #how long to run the mcmc
 numSteps=15000
@@ -45,12 +45,13 @@ def chi2(params):
     tau=params[3]
     ombh2=params[4]
     w=params[5]
-    ns=params[6]
+    wa=params[6]
+    ns=params[7]
 
     
-    pars = camb.set_params(H0=H0, w=w, ombh2=ombh2, omch2=omch2, tau=tau,  
+    pars = camb.set_params(H0=H0, ombh2=ombh2, omch2=omch2, tau=tau,  
                        As=As, ns=ns, halofit_version='mead', lmax=lmax)
-    #pars.DarkEnergy=camb.DarkEnergyPPF(w=w,wa=wa)
+    pars.DarkEnergy=camb.DarkEnergyPPF(w=w,wa=-(wa-w)/3)
     results = camb.get_results(pars)
     powers =results.get_cmb_power_spectra(pars, CMB_unit='muK')
     totCL=np.resize(np.delete(powers['total'][:,0],[0,1]),(lmax))
