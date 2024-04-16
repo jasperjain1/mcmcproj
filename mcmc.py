@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy
 
 #Loading the Planck 2020 TT angular power spectrum
-data=data=np.loadtxt('spectrum.txt')
+data=np.loadtxt('spectrum.txt')
 ls=data[:,0]
 Ds=data[:,1]
 lmax=800
@@ -17,22 +17,23 @@ sigmas=np.resize(sigmas,(lmax))
 n=lmax
 #Parameters and ranges 
 #H0: 62-72
-H0R= np.array([60,75])
+H0R= np.array([50,90])
 #As: 1.9-2.1e-9
-AsR=np.array([1.95e-9,2.25e-9])
+AsR=np.array([1.7e-9,2.3e-9])
 #omch2 (dark matter density, matter density fixed at ombh2=.022): .1-.14 
-omch2R=np.array([.1,.16])
+omch2R=np.array([.06,.18])
 #tau: .045-.075
-tauR=np.array([.04,.08])
+tauR=np.array([.0442,.08])
 #omk:-.1 - .1
-omkR=np.array([-.1,.1])
-w=np.array([-1.3,-.7])
-wa=np.array([-1,1])
-ns=np.array([.7,1.3])
-parspace=np.array([H0R,AsR,omch2R,tauR,omkR,w,wa,ns])
+ombh2R=np.array([.013,.035])
+w=np.array([-1.5,-.5])
+#new param: wa=w-3wa
+wa=np.array([-4,2])
+ns=np.array([.7,1])
+parspace=np.array([H0R,AsR,omch2R,tauR,ombh2R,w,ns])
 
 #how long to run the mcmc
-numSteps=1500
+numSteps=15000
 
 def chi2(params):
     """
@@ -42,16 +43,14 @@ def chi2(params):
     As=params[1]
     omch2=params[2]
     tau=params[3]
-    omk=params[4]
+    ombh2=params[4]
     w=params[5]
-    wa=params[6]
-    ns=params[7]
+    ns=params[6]
 
     
-    pars = camb.set_params(H0=H0, ombh2=.022, omch2=omch2, omk=omk, mnu=0.06, tau=tau,  
+    pars = camb.set_params(H0=H0, w=w, ombh2=ombh2, omch2=omch2, tau=tau,  
                        As=As, ns=ns, halofit_version='mead', lmax=lmax)
-    pars.DarkEnergy=camb.DarkEnergyPPF(w=w,wa=wa)
-
+    #pars.DarkEnergy=camb.DarkEnergyPPF(w=w,wa=wa)
     results = camb.get_results(pars)
     powers =results.get_cmb_power_spectra(pars, CMB_unit='muK')
     totCL=np.resize(np.delete(powers['total'][:,0],[0,1]),(lmax))
@@ -73,7 +72,7 @@ def inParspace(nparams, parspace):
 def proposal(params, parspace):
     while True:
         seed=np.random.rand((len(parspace)))-.5
-        step=(parspace[:,1]-parspace[:,0])*seed/17
+        step=(parspace[:,1]-parspace[:,0])*seed/20
         if inParspace(params+step,parspace):
             return params+step
 
@@ -92,7 +91,7 @@ def accept(chi2Current, nparams):
     lNew=lhood(chi2New)
     u=np.random.rand()
 
-    print("Current likelihood:" + str(lCurrent) + "  prop lhood:" + str(lNew) + "  prop chi2:" + str(chi2New))
+    print("  Prop chi2:" + str(chi2New))
     #Case where old params are better, but both likelihoods are 0. See the paper.
     if (lNew == 0 and lCurrent == 0):
         alpha=np.exp(-(1/2)*((chi2New-n)**2-(chi2Current-n)**2)/2*n)
@@ -108,6 +107,7 @@ def accept(chi2Current, nparams):
 
 startSeed=np.random.rand(len(parspace))
 params=parspace[:,0]+(parspace[:,1]-parspace[:,0])*startSeed
+
 print("Starting paramters: " + str(params) )
 
 distribution=[]
@@ -120,14 +120,14 @@ while iterations < numSteps:
     while accepted==False:
         distribution.append(params)
         print("Current parameters: " + str(params))
-        print("Current Chi Squared" + str(chi2Current))
+        print("Current Chi Squared: " + str(chi2Current))
 
         nparams = proposal(params,parspace)
         accepted = accept(chi2Current, nparams)
         iterations+=1
         print(iterations)
         if iterations % 30 == 0:
-            np.savetxt('data5.csv',np.array(distribution),delimiter=',')
+            np.savetxt('notdm3.csv',np.array(distribution),delimiter=',')
     params=nparams
 
 print(distribution)
