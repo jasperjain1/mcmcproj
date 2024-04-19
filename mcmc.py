@@ -3,6 +3,7 @@ import camb
 import matplotlib.pyplot as plt
 import scipy
 
+from camb.dark_energy import DarkEnergyPPF, DarkEnergyFluid
 #Loading the Planck 2020 TT angular power spectrum
 data=np.loadtxt('spectrum.txt')
 ls=data[:,0]
@@ -28,12 +29,12 @@ tauR=np.array([.0442,.08])
 ombh2R=np.array([.013,.035])
 w=np.array([-1.5,-.5])
 #new param: wa=w-3wa
-wa=np.array([-4,2])
+wa=np.array([-1,1])
 ns=np.array([.7,1])
 parspace=np.array([H0R,AsR,omch2R,tauR,ombh2R,w,wa,ns])
 
 #how long to run the mcmc
-numSteps=15000
+numSteps=5000
 
 def chi2(params):
     """
@@ -45,13 +46,13 @@ def chi2(params):
     tau=params[3]
     ombh2=params[4]
     w=params[5]
-    wa=params[6]
+    wa= params[6]
     ns=params[7]
 
     
-    pars = camb.set_params(H0=H0, ombh2=ombh2, omch2=omch2, tau=tau,  
-                       As=As, ns=ns, halofit_version='mead', lmax=lmax)
-    pars.DarkEnergy=camb.DarkEnergyPPF(w=w,wa=-(wa-w)/3)
+    pars = camb.set_params(H0=H0, w=w, wa=wa, ombh2=ombh2, omch2=omch2, tau=tau,  
+                       As=As, ns=ns, halofit_version='mead', lmax=lmax, dark_energy_model='DarkEnergyPPF')
+    pars.DarkEnergy = DarkEnergyPPF(w=w, wa=wa)
     results = camb.get_results(pars)
     powers =results.get_cmb_power_spectra(pars, CMB_unit='muK')
     totCL=np.resize(np.delete(powers['total'][:,0],[0,1]),(lmax))
@@ -108,7 +109,6 @@ def accept(chi2Current, nparams):
 
 startSeed=np.random.rand(len(parspace))
 params=parspace[:,0]+(parspace[:,1]-parspace[:,0])*startSeed
-
 print("Starting paramters: " + str(params) )
 
 distribution=[]
@@ -128,41 +128,7 @@ while iterations < numSteps:
         iterations+=1
         print(iterations)
         if iterations % 30 == 0:
-            np.savetxt('notdm3.csv',np.array(distribution),delimiter=',')
+            np.savetxt('jaravers.csv',np.array(distribution),delimiter=',')
     params=nparams
 
 print(distribution)
-
-
-
-
-"""
-
-a=np.zeros(len(ws))
-j=0
-    print(pars)
-    
-    
-    #lsim = np.arange(totCL.shape[0])
-    #plt.plot(lsim, totCL[:,0])
-    chi2=0
-    for i in range(1,2000):
-        chi2+=((Ds[i]-totCL[i,0])/sigmas[i])**2
-    a[j]= chi2
-    j+=1
-
-
-
-plt.plot(ws,a)
-plt.show()
-
-#for i in range(len(Dl)):
- #   Cl[i]=1/(ls[i]*(ls[i]+1))*Dl[i]
-#plt.errorbar(ls,Ds,yerr=sigmas)
-#plt.show()
-
-#Computing likelihoods:
-
-
-print("done")
-"""
