@@ -4,10 +4,20 @@ import scipy
 
 #parspace=np.array([H0R,AsR,omch2R,tauR,ombh2R,w,wa,ns])
 
-data1 = np.loadtxt('data10-15.csv', delimiter=',', dtype=float)
-data2 = np.loadtxt('data13-13.csv', delimiter=',', dtype=float)
-data3 = np.loadtxt('data14-5.csv', delimiter=',', dtype=float)
+data1 = np.loadtxt('data/data10-15.csv', delimiter=',', dtype=float)
+data2 = np.loadtxt('data/data13-13.csv', delimiter=',', dtype=float)
+data3 = np.loadtxt('data/data14-5.csv', delimiter=',', dtype=float)
 
+
+d1=data1[1000:2500,4]
+d2=data2[1000:2500,4]
+d3=data3[1000:2500,4]
+print(np.std(np.array((np.mean(d1),np.mean(d2),np.mean(d3))))**2)
+print(np.mean(np.std(d1)**2+np.std(d2)**2+np.std(d3)**2))
+print(np.mean([np.mean(d1),np.mean(d2),np.mean(d3)]))
+
+
+"""
 H0R= np.array([50,90])
 #As: 1.9-2.1e-9
 AsR=np.array([1.7e-9,2.3e-9])
@@ -22,6 +32,9 @@ w=np.array([-1.5,-.5])
 wa=np.array([-1,1])
 ns=np.array([.7,1])
 parspace=np.array([H0R,AsR,omch2R,tauR,ombh2R,w,wa,ns])
+
+
+
 
 figure, axis = plt.subplots(2,4) 
 parlabels= ["$H_0$", "$A_s$", "$\Omega_ch^2$", "$\tau$", "$\Omega_bh^2$", "$w_0$", "$w_a$", "$n_s$"]
@@ -39,7 +52,7 @@ for i in range(len(data1[0,:])):
 
 plt.show()
 
-""""
+
 step=np.linspace(1,len(data[:,0]),len(data[:,0]))
 Ass=data[:,6]
 ws=data[:,5]
